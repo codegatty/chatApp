@@ -4,15 +4,15 @@ import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import {ConfigService} from '@nestjs/config'
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly jwtService: JwtService,
-    private readonly configService:ConfigService
+    private readonly configService: ConfigService,
   ) {}
-  async registerUser(user: Prisma.UserCreateInput) {
+  async registerUser(user: Prisma.UserCreateInput, fileName: string) {
     let existingUser: Prisma.UserCreateInput;
     try {
       existingUser = await this.databaseService.user.findUnique({
@@ -33,7 +33,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(user.password, 10);
     try {
       await this.databaseService.user.create({
-        data: { ...user, password: hashedPassword },
+        data: { ...user, password: hashedPassword, avatarUrl: fileName },
       });
     } catch (e) {
       console.log(e);
@@ -49,12 +49,15 @@ export class AuthService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    return { message: 'user created successfully', data: user };
+    return {
+      message: 'user created successfully',
+      data: { ...user, avatarUrl: fileName },
+    };
   }
 
   async loginUser(userData: LoginUserDto) {
     const { email, password } = userData;
-    let user: Prisma.UserCreateInput;
+    let user:Prisma.UserCreateInput
     try {
       user = await this.databaseService.user.findUnique({
         where: { email: email },
@@ -73,11 +76,18 @@ export class AuthService {
       throw new HttpException('Wrong Credential', HttpStatus.UNAUTHORIZED);
     }
     //?STEP THREE: GENERATE JWT TOKEN
-    const accessToken = await this.generateJWTToken(user.id, this.configService.get<string>('expireTime.accessToken'));
-    const refreshToken = await this.generateJWTToken(user.id,  this.configService.get<string>('expireTime.accessToken'));
+    const accessToken = await this.generateJWTToken(
+      user.id,
+      this.configService.get<string>('expireTime.accessToken'),
+    );
+    const refreshToken = await this.generateJWTToken(
+      user.id,
+      this.configService.get<string>('expireTime.accessToken'),
+    );
+    
     return {
       message: 'logged in successfully',
-      data: userData,
+      data: {...user},
       accessToken,
       refreshToken,
     };
@@ -101,11 +111,14 @@ export class AuthService {
 
       return { accessToken };
     } catch (e) {
-      throw new HttpException("Something went wrong while generating refresh token",HttpStatus.BAD_REQUEST)
+      throw new HttpException(
+        'Something went wrong while generating refresh token',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   async generateJWTToken(userId: string, expireTime: string) {
-    return await  this.jwtService.sign({ userId }, { expiresIn: expireTime });
+    return await this.jwtService.sign({ userId }, { expiresIn: expireTime });
   }
 }
