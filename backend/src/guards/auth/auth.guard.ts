@@ -14,9 +14,14 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
+    const cookie:string=request.cookies['refreshToken']
     const token = this.extractTokenFromHeader(request);
-    if (!token) {
+    console.log("---------------------------")
+    console.log("accessToken: "+token)
+    console.log("refreshToken"+cookie)
+    console.log("---------------------------")
+    if (!token || !cookie) {
       throw new HttpException('Invalid access token', HttpStatus.UNAUTHORIZED);
     }
     try {

@@ -62,7 +62,7 @@ export class AuthController {
   @Get('test')
   @UseGuards(AuthGuard)
   async test(@Req() req){
-    return "hello by authentication"+req.userId
+    return {message:'Authenticated endpoint accessed', user:req.userId}  // req.user contains the authenticated user objectreq.userId
   }
 
 }

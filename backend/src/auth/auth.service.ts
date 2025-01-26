@@ -82,12 +82,12 @@ export class AuthService {
     );
     const refreshToken = await this.generateJWTToken(
       user.id,
-      this.configService.get<string>('expireTime.accessToken'),
+      this.configService.get<string>('expireTime.refreshToken'),
     );
     
     return {
       message: 'logged in successfully',
-      data: {...user},
+      ...user,
       accessToken,
       refreshToken,
     };
@@ -109,7 +109,7 @@ export class AuthService {
 
       const accessToken = await this.generateJWTToken(userId, '1m');
 
-      return { accessToken };
+      return { ...userExist,accessToken };
     } catch (e) {
       throw new HttpException(
         'Something went wrong while generating refresh token',
