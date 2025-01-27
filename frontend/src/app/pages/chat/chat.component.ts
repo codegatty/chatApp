@@ -4,6 +4,7 @@ import {
   effect,
   signal,
   OnDestroy,
+  
   OnInit,
 } from '@angular/core';
 // import { AuthService } from '../../services/auth.service';
@@ -25,11 +26,12 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
 }
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, NgClass],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.css',
 })
@@ -51,7 +53,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chat.onSomeOneJoin().subscribe({
       next: (message: string) => {
         if (message) {
-          this.joined.update((prev) => prev + ' ' + message);
+          this.joined.update((prev) => prev + ',' + message);
         }
       },
     });
@@ -95,5 +97,11 @@ export class ChatComponent implements OnInit, OnDestroy {
       })
     );
     console.log(result);
+  }
+
+  getColor(index:number){
+    const val=((index%6)*300).toString()
+    console.log(val)
+    return 'bg-yellow-'+val
   }
 }
