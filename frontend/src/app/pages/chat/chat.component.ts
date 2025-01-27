@@ -1,75 +1,99 @@
-import { Component, inject,effect,signal} from '@angular/core';
+import {
+  Component,
+  inject,
+  effect,
+  signal,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 // import { AuthService } from '../../services/auth.service';
-// import { ChatService } from '../../services/chat.service';
-import { ReactiveFormsModule,FormControl, Validators, FormGroup } from '@angular/forms';
+import { ChatService } from '../../services/chat.service';
+import {
+  ReactiveFormsModule,
+  FormControl,
+  Validators,
+  FormGroup,
+} from '@angular/forms';
 import { Ichat } from '../../interface/char_response';
 import { DatePipe } from '@angular/common';
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+export interface ChatMessage {
+  senderId: string;
+  receiverId: string;
+  content: string;
+  timestamp: Date;
+}
+
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [ReactiveFormsModule,DatePipe],
+  imports: [ReactiveFormsModule, DatePipe],
   templateUrl: './chat.component.html',
-  styleUrl: './chat.component.css'
+  styleUrl: './chat.component.css',
 })
-export class ChatComponent {
+export class ChatComponent implements OnInit, OnDestroy {
   // private auth=inject(AuthService)
-  // private chat=inject(ChatService)
-  private http=inject(HttpClient)
-  private authSerivece=inject(AuthService)
-  chats=signal<Ichat[]>([])
- chatForm=    new FormGroup({
-  text:new FormControl("",[Validators.required,Validators.minLength(1)])
-})
-   
-  constructor(){
-    effect(()=>{
-      this.onListChat()
-    })
+  private chat = inject(ChatService);
+  private http = inject(HttpClient);
+  private authSerivece = inject(AuthService);
+  joined = signal<string>('');
+  chats = signal<Ichat[]>([]);
+  chatForm = new FormGroup({
+    text: new FormControl('', [Validators.required, Validators.minLength(1)]),
+  });
+    messages=signal<string[]>([]);
+  receiverId = '';
+  ngOnInit(): void {
+    this.chat.joinChat(this.authSerivece.user?.email ?? 'Guest');
+
+    this.chat.onSomeOneJoin().subscribe({
+      next: (message: string) => {
+        if (message) {
+          this.joined.update((prev) => prev + ' ' + message);
+        }
+      },
+    });
+
+    this.chat.onNewMessage().subscribe({
+      next: (message: string) => {
+        
+        this.messages.update((prev)=>[message,...prev])
+      },
+    });
   }
 
-  signOut(){
-    // this.auth.logout()
+  constructor() {
+    effect(() => {
+      //this.onListChat()
+    });
+  }
+  sendMessage() {
+    const text = this.chatForm.controls['text'].value;
+    if (text) {
+      this.chat.sendMessage(text);
+    }
+  }
+  ngOnDestroy() {
+    this.chat.disconnect();
   }
 
-  onSubmit(){
-    if(this.chatForm?.valid){
-    const value=this.chatForm.value.text as string
-    this.chatForm.reset()
-    // this.chat.chatMessage(value)
-    this.onListChat()
-    }   
+  signOut() {
+    this.authSerivece.logout();
   }
 
-  async onListChat(){
-  //   const response:Ichat[]|null|undefined=await this.chat.listChat()
-  //   if(response){
-  //   this.chats.set(response)
-  // }
-  }
+  async test() {
+    console.log(this.authSerivece.user);
 
-  async onSelectMessageToDelete(message:Ichat){
-    // await this.chat.deleteMessage(message)
-    // this.onListChat()
-  }
-
-  async test(){
-    console.log(this.authSerivece.user)
-    
     const headers = new HttpHeaders({
       Authorization: `Bearer ${this.authSerivece.getAccessToken()}`, // Include the Bearer token in the Authorization header
     });
     const result = await firstValueFrom(
-      this.http.get('http://localhost:3000/auth/test',{
+      this.http.get('http://localhost:3000/auth/test', {
         withCredentials: true,
-      }))
-console.log(result)
-    
-    }
-
-
-
-
+      })
+    );
+    console.log(result);
+  }
 }

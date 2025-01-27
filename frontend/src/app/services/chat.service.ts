@@ -1,51 +1,73 @@
-import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../env/env.development';
+import { inject, Injectable } from '@angular/core';
+import { io, Socket } from 'socket.io-client';
+import { Observable } from 'rxjs';
 import { Ichat } from '../interface/char_response';
+import { AuthService } from './auth.service';
+//chatMessage(text:string)
+//listChat
+//deleteChat(chat:Ichat)
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChatService {
-  private supeBase?: SupabaseClient;
+  private authService = inject(AuthService);
+  private socket: Socket;
+
   constructor() {
-    this.supeBase = createClient(
-      environment.supabaseUrl,
-      environment.supabaseKey
-    );
+    //connect is a built in event that listen for the successful connection to the websocket sever
+    this.socket = io('http://localhost:3002', {});
+    this.socket.on('connect', () => {
+      console.log('Connected to socket server');
+    });
   }
 
-  async chatMessage(text:string){
-    try{
-      const response=await this.supeBase?.from('chats').insert({text})
+  joinChat(email: string): void {
+    this.socket.emit('user-joined', { message: email + ' joined the chat' });
+  }
 
-      if(response?.data){
-        return response.data
-      }else{
-        console.error('Error sending chat message:', response?.error?.message)
-        return null
-      }
-    }catch(err){
-      console.error('Error sending chat message:', err)
-      return null
+  onSomeOneJoin():Observable<string>{
+    return new Observable((observer)=>{
+      this.socket.on('user-joined',(payload:{message:string})=>{
+        observer.next(payload.message);
+      })
+
+    });
+  }
+
+  // Listen for new messages
+  onNewMessage(): Observable<string> {
+    return new Observable((observer) => {
+      this.socket.on('message', (message: string) => {
+        observer.next(message);
+      });
+    });
+  }
+
+
+  // Listen for user online status
+
+  disconnect(): void {
+    if (this.socket) {
+      this.socket.disconnect();
     }
   }
 
-  async listChat(){
-    try{
-      const response=await this.supeBase?.from('chats').select('*,users(*)')
-      if(response?.error){
-        alert("error"+response.error.message)
-      }
-      return response?.data
-    }catch(err){
-      throw err
+  // Send a message
+  sendMessage( text:string): void {
+    if(this.authService.user){
+    const payload:Ichat={
+      createdAt:new Date(),
+      message:text,
+      userId:this.authService.user?.id
     }
+    this.socket.emit('message', payload);
   }
-
-  async deleteMessage(message:Ichat){
-    const data=await this.supeBase?.from('chats').delete().eq('id',message.id)
-    return data
+    
   }
+  async chatMessage(text: string) {}
 
+  async listChat() {}
+
+  async deleteMessage(message: Ichat) {}
 }

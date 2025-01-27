@@ -4,27 +4,31 @@
     <h3 class="my-5 text-2xl font-bold">Supa Chat<button (click)="signOut()" class="text-sm border-2 border-black rounded-lg bg-red-500 text-white p-1 font-semibold" style="float: right;">Log
         out</button>
     </h3>
+
+    <div>
+      {{joined()}}
+    </div>
     
     <div class="card">
       <div>
 
         <div class="col-12 col-lg-12 col-xl-12">
-          @for (msg of this.chats(); track msg) {
+          @for (msg of this.messages(); track msg) {
           <div class="position-relative">
             <div class="chat-messages p-4">
               <div class="chat-message-left pb-4">
                 <div class="me-5">
-                  <img
+                  <!-- <img
                     src={{msg.users.avatar_url}}
-                    class="rounded-full" alt="Sharon Doe" width="40" height="40">
-                  <div class="text-muted small text-nowrap mt-2">{{msg.created_at|date:'M/d/yy, h:mm a'}}</div>
+                    class="rounded-full" alt="Sharon Doe" width="40" height="40"> -->
+                  <!-- <div class="text-muted small text-nowrap mt-2">{{msg.created_at|date:'M/d/yy, h:mm a'}}</div> -->
                 </div>
                 <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-3">
-                  <div class="font-weight-bold mb-1">{{msg.users.full_name}}</div>
-                  {{msg.text}}
+                  <div class="font-weight-bold mb-1">{{msg}}</div>
+                  <!-- {{msg.text}} -->
                 </div>
                 <div>
-                  <button (click)="onSelectMessageToDelete(msg)" class="bg-red-900 text-white hover:text-black font-semibold text-sm p-1 hover:bg-red-400">Delete</button>
+                  <!-- <button (click)="onSelectMessageToDelete(msg)" class="bg-red-900 text-white hover:text-black font-semibold text-sm p-1 hover:bg-red-400">Delete</button> -->
                 </div>
               </div>
             </div>
@@ -33,8 +37,8 @@
           <div class="text-center">No messages yet</div>
         }
           <div class="border-t-2 border-gray-400">
-            <form class="flex flex-row border border-gray-400 mt-10 p-1 rounded-lg " [formGroup]="chatForm" (ngSubmit)="onSubmit()">
-              <input formControlName="text" type="text" class="basis-[90%] outline-none" placeholder="Type your message" >
+            <form class="flex flex-row border border-gray-400 mt-10 p-1 rounded-lg " [formGroup]="chatForm" (ngSubmit)="sendMessage()">
+              <input  formControlName="text" type="text" class="basis-[90%] outline-none" placeholder="Type your message" >
               <button class="basis-[10%] text-sm border-2 border-black rounded-lg bg-yellow-500 text-white p-1 font-semibold">Send</button>
             </form>
           </div>
