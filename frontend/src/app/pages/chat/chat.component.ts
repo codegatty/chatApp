@@ -39,13 +39,14 @@ export class ChatComponent implements OnInit, OnDestroy {
   // private auth=inject(AuthService)
   private chat = inject(ChatService);
   private http = inject(HttpClient);
-  private authSerivece = inject(AuthService);
+   authSerivece = inject(AuthService);
+   isAiEnabled=false
   joined = signal<string>('');
   chats = signal<Ichat[]>([]);
   chatForm = new FormGroup({
     text: new FormControl('', [Validators.required, Validators.minLength(1)]),
   });
-    messages=signal<string[]>([]);
+    messages=signal<Ichat[]>([]);
   receiverId = '';
   ngOnInit(): void {
     this.chat.joinChat(this.authSerivece.user?.email ?? 'Guest');
@@ -59,16 +60,21 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     this.chat.onNewMessage().subscribe({
-      next: (message: string) => {
-        
-        this.messages.update((prev)=>[message,...prev])
+      next: (message: Ichat) => {
+        this.messages.update((prev)=>[...prev,message])
       },
     });
   }
 
   constructor() {
     effect(() => {
-      //this.onListChat()
+      const data=this.chat.listChat()
+      data.then((res)=>{
+        if(res instanceof Array){
+          this.messages.set(res)
+        }
+      }
+      )
     });
   }
   sendMessage() {
@@ -103,5 +109,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     const val=((index%6)*300).toString()
     console.log(val)
     return 'bg-yellow-'+val
+  }
+
+  enableAI(){
+    this.isAiEnabled=!this.isAiEnabled
   }
 }

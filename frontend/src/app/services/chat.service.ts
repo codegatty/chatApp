@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
-import { Observable } from 'rxjs';
+import { Observable,firstValueFrom } from 'rxjs';
 import { Ichat } from '../interface/char_response';
 import { AuthService } from './auth.service';
+import { HttpClient } from '@angular/common/http';
 //chatMessage(text:string)
 //listChat
 //deleteChat(chat:Ichat)
@@ -13,6 +14,7 @@ import { AuthService } from './auth.service';
 export class ChatService {
   private authService = inject(AuthService);
   private socket: Socket;
+  private httpClient=inject(HttpClient)
 
   constructor() {
     //connect is a built in event that listen for the successful connection to the websocket sever
@@ -36,9 +38,9 @@ export class ChatService {
   }
 
   // Listen for new messages
-  onNewMessage(): Observable<string> {
+  onNewMessage(): Observable<Ichat> {
     return new Observable((observer) => {
-      this.socket.on('message', (message: string) => {
+      this.socket.on('message', (message: Ichat) => {
         observer.next(message);
       });
     });
@@ -67,7 +69,10 @@ export class ChatService {
   }
   async chatMessage(text: string) {}
 
-  async listChat() {}
+   async listChat() {
+    const data=await firstValueFrom(this.httpClient.get('http://localhost:3000/chat/allChat'))
+    return data
+  }
 
   async deleteMessage(message: Ichat) {}
 }
