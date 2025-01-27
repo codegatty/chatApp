@@ -1,24 +1,40 @@
-import { MessageBody, SubscribeMessage, WebSocketGateway,OnGatewayConnection,OnGatewayDisconnect, WebSocketServer } from '@nestjs/websockets';
-import {Socket,Server} from 'socket.io'
+import { MessageBody, SubscribeMessage, WebSocketGateway,OnGatewayConnection,OnGatewayDisconnect, WebSocketServer ,ConnectedSocket} from '@nestjs/websockets';
+import {Socket,Server,} from 'socket.io'
+
+type Ichat= {createdAt:string, message:string,userId:string}
+
 @WebSocketGateway(3002,{cors:{origin:'*'}})
 export class ChatGateway implements OnGatewayConnection,OnGatewayDisconnect{
 
   @WebSocketServer()
   server:Server
 
-  handleConnection(client:Socket) {
-    client.emit('user-joined',{message:'You are joining this chat'})
-    client.broadcast.emit("user-joined",{message:client.id+"joined the chat"})
+  private activeUsers: Map<string, string> = new Map();
+
+  @SubscribeMessage('user-joined')
+  handleConnection(@ConnectedSocket() client:Socket,@MessageBody() data:any,) {
+    
+    if(data){
+      client.emit('user-joined',{message:'You are joining this chat'})
+    client.broadcast.emit("user-joined",{message:data.message})
+    }
+    
   }
 
   handleDisconnect(client:Socket) {
-    client.emit('user-left',{message:'You are left this chat'})
-    client.broadcast.emit("user-left",{message:client.id+"left the chat"})
+    const userId = this.activeUsers.get(client.id);
+    this.activeUsers.delete(client.id);
+    this.server.emit('userOffline', userId);
+    console.log(`Client disconnected: ${client.id}`);
   }
+
   @SubscribeMessage('message')
-  handleMessage(client:Socket,message:any) {
-    client.emit("message","your message "+message)
-    client.broadcast.emit("message","message by "+client.id+" : "+message)
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data:Ichat
+  ) {
+    client.emit('message',data.message)
+    client.broadcast.emit('message',data.message)
   }
 
 }
