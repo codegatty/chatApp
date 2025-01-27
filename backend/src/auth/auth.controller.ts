@@ -27,10 +27,10 @@ export class AuthController {
       await this.authService.loginUser(loginData);
     console.log(refreshToken);
     resp.cookie('refreshToken', refreshToken, {
-      httpOnly: true, // Prevent JavaScript access
-      sameSite: 'strict', // Prevent CSRF
-      path:'/',
-      maxAge: parseInt(this.configService.get<string>('expireTime.cookie'))// 7 days in milliseconds
+      httpOnly: true,  // Only allow the cookie to be accessed by the server (not client-side JavaScript)
+      sameSite: 'lax',  // Prevent cross-site request forgery attacks
+      secure:false,
+      maxAge:parseInt(this.configService.get<string>('expireTime.cookie'))// 7 days in milliseconds
     });
     return resp.send(response);
   }
@@ -52,12 +52,11 @@ export class AuthController {
     if(!refreshToken)
       throw new HttpException("Invalid refresh token",HttpStatus.UNAUTHORIZED)
     // Clear the HTTP-only refresh token cookie
-    res.clearCookie('refreshToken', { httpOnly: true,path:'/'});
+    res.clearCookie('refreshToken', { httpOnly: true});
   
     // Optionally, send a success response
     res.status(200).json({ message: 'Successfully logged out' });
   }
-
   //TODO:TEST OF AUTHENTICATED ENDPOINT
   @Get('test')
   @UseGuards(AuthGuard)

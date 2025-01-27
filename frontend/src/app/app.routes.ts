@@ -16,7 +16,7 @@ export const routes: Routes = [
         loadComponent:()=>import("../app/pages/login/login.component").then((comp)=>comp.LoginComponent)
     },{
         path:'',
-        redirectTo:'register',
+        redirectTo:'chat',
         pathMatch:'full'
     }
 ];

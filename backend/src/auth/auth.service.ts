@@ -78,11 +78,11 @@ export class AuthService {
     //?STEP THREE: GENERATE JWT TOKEN
     const accessToken = await this.generateJWTToken(
       user.id,
-      this.configService.get<string>('expireTime.accessToken'),
+      this.configService.get<string>('expireTime.accessToken')
     );
     const refreshToken = await this.generateJWTToken(
       user.id,
-      this.configService.get<string>('expireTime.refreshToken'),
+      this.configService.get<string>('expireTime.refreshToken')
     );
     
     return {
@@ -107,7 +107,7 @@ export class AuthService {
       if (!userExist)
         throw new HttpException('UNAUTHORIZED access', HttpStatus.UNAUTHORIZED);
 
-      const accessToken = await this.generateJWTToken(userId, '1m');
+      const accessToken = await this.generateJWTToken(userId, this.configService.get<string>('expireTime.accessToken'));
 
       return { ...userExist,accessToken };
     } catch (e) {
@@ -118,7 +118,7 @@ export class AuthService {
     }
   }
 
-  async generateJWTToken(userId: string, expireTime: string) {
-    return await this.jwtService.sign({ userId }, { expiresIn: expireTime });
+   generateJWTToken(userId: string, expireTime: string) {
+    return  this.jwtService.sign({ userId }, { expiresIn: expireTime });
   }
 }

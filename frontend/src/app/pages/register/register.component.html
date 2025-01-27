@@ -4,7 +4,7 @@
       <p class="text-sm text-gray-500">Create your account to join the chat</p>
     </div>
   
-    <form class="registration-form space-y-4" [formGroup]="registerForm" (ngSubmit)="onSubmitFormData()">
+    <form enctype="multipart/form-data" class="registration-form space-y-4" [formGroup]="registerForm" (ngSubmit)="onSubmitFormData()" >
       <div class="form-group">
         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
         <input formControlName="email" type="text" id="email" name="email" class="form-control mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter your email" />
@@ -24,14 +24,24 @@
         }
       </div>
   
-      <!-- <div class="form-group disabled:cursor-wait " aria-disabled="true">
+      <div class="form-group disabled:cursor-wait " aria-disabled="true">
         <label for="avatar" class="block text-sm font-medium text-gray-700">Avatar</label>
         <div class="avatar-upload mt-1">
-          <input type="file" id="avatar" name="avatar" class="form-control block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100" />
+          <input 
+          (change)="onFileChange($event)"
+           accept="image/jpeg" type="file" id="avatar" name="avatar" class="form-control block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-gray-300 file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100" />
           <p class="upload-info text-xs text-gray-500 mt-2">Choose an image for your avatar</p>
+          @if(registerForm.controls['avatarUrl'].errors?.['required'] && registerForm.controls['avatarUrl'].touched ){
+            <p class="text-red-500 text-sm font-semibold">This field is required</p>
+          }
+          @if(errorMessage){
+            <p class="text-red-500 text-sm font-semibold">{{errorMessage}}</p>
+          }
         </div>
-      </div> -->
-  
+      </div>
+      @if(formErrorMessage){
+        <p class="text-red-500 text-sm font-semibold">{{formErrorMessage}}</p>
+      }
       <div class="form-actions text-center">
         <button  type="submit" class="btn btn-primary w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed">
           Register
